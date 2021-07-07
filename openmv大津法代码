@@ -1,0 +1,38 @@
+import sensor, image, time, math, pyb
+led = pyb.LED(3)                          # Red LED = 1, Green LED = 2, Blue LED = 3, IR LEDs = 4.
+def senser_init():                         # 摄像头传感器初始化函数
+    sensor.reset()                         # Initialize the camera sensor.
+    sensor.set_pixformat(sensor.GRAYSCALE) # use grayscale.
+    sensor.set_framesize(sensor.QVGA)     # use QQVGA for speed.
+    sensor.skip_frames(30)                 # Let new settings take affect.
+    sensor.set_auto_gain(True)             # must be turned off for color tracking
+    sensor.set_auto_whitebal(True)         # must be turned off for color tracking
+    return;
+def Maximum_interclass_variance_method(grayFrame):
+    w = 0
+    avgValue = 0
+    t = 0
+    maxVariance = 0
+    statistics_data = grayFrame.get_statistics()
+    u = statistics_data.mean()
+    histogram_data = grayFrame.get_histogram()    #获取灰度直方图
+    histogram_bins = histogram_data.bins()   #获取灰度直方图的列表
+    for i in range(len(histogram_bins)):
+        w += (histogram_bins[i]+0.0000001)
+        avgValue  += i * (histogram_bins[i]+0.0000001)
+        t = avgValue/w - u
+        variance = t * t * w /(1.1 - w)
+        if(variance > maxVariance):
+            maxVariance = variance;
+            threshold = i;
+    return threshold
+
+senser_init();
+while(True):
+    img = sensor.snapshot()
+    h = Maximum_interclass_variance_method(img)
+    #histogram_data = img.get_histogram()    #获取灰度直方图
+    #histogram_bins = histogram_data.bins()   #获取灰度直方图的列表
+    Threshold = [0 , h]
+    img = img.binary([Threshold])
+    print(h)
